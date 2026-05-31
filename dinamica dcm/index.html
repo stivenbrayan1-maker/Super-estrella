@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="es" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>La Super Estrella</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Fredoka', sans-serif; }
+    html, body { height: 100%; }
+    @keyframes rollDice { 0% { transform: rotateX(0deg) rotateY(0deg) scale(0.8); } 50% { transform: rotateX(180deg) rotateY(180deg) scale(1.1); } 100% { transform: rotateX(360deg) rotateY(360deg) scale(1); } }
+    @keyframes starPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spinSelection { 0% { opacity: 0.3; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+    .dice-rolling { animation: rollDice 3.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .spin-animation { animation: spinSelection 0.4s ease-out; }
+    .star-pulse { animation: starPulse 1.5s infinite; }
+    .slide-in { animation: slideIn 0.6s ease-out; }
+    .dice-face { width: 120px; height: 120px; background: linear-gradient(135deg, #fde047 0%, #fbbf24 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 60px; font-weight: bold; color: #1a1a2e; box-shadow: 0 8px 32px rgba(255,215,0,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); border: 3px solid #f59e0b; }
+    .game-bg { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); position: relative; overflow: hidden; }
+    .game-bg::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 20% 50%, rgba(255,215,0,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139,92,246,0.1) 0%, transparent 50%); pointer-events: none; }
+    .input-field { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px 16px; border-radius: 8px; font-size: 15px; transition: all 0.3s; }
+    .input-field:focus { background: rgba(255,255,255,0.25); border-color: #fde047; box-shadow: 0 0 15px rgba(255,215,0,0.3); outline: none; }
+    .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 12px; }
+    .media-item { background: linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(59,130,246,0.3) 100%); border-radius: 12px; padding: 12px; cursor: pointer; border: 2px solid transparent; transition: all 0.3s; font-size: 18px; font-weight: bold; }
+    .media-item:hover { border-color: #fde047; background: linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(251,191,36,0.3) 100%); transform: scale(1.1); box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+    .media-item:active { transform: scale(0.95); }
+    .btn-primary { background: linear-gradient(135deg, #fde047 0%, #fbbf24 100%); color: #1a1a2e; font-weight: bold; border: none; border-radius: 12px; padding: 14px 24px; font-size: 16px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(255,215,0,0.3); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(255,215,0,0.5); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary { background: linear-gradient(135deg, rgba(139,92,246,0.8) 0%, rgba(59,130,246,0.8) 100%); color: white; font-weight: bold; border: 2px solid rgba(255,215,0,0.4); border-radius: 12px; padding: 12px 20px; transition: all 0.3s; }
+    .btn-secondary:hover { transform: translateY(-2px); border-color: #fde047; box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+    .card-container { background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(139,92,246,0.1) 100%); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 24px; animation: slideIn 0.6s ease-out; }
+    .title-main { font-size: 3.5rem; font-weight: 900; background: linear-gradient(135deg, #fde047 0%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: slideIn 0.8s ease-out; }
+    .image-gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; max-width: 700px; margin: 0 auto; }
+    .image-gallery-item { background: rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; width: 90px !important; height: 90px !important; flex-shrink: 0; }
+    .image-gallery-item:hover { border-color: #fde047; transform: scale(1.08); box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+    .image-gallery-item img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+    .activity-image { width: 100%; max-width: 500px; max-height: 600px; height: auto; border-radius: 12px; object-fit: contain; }
+    .error-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; max-width: 600px; margin: 0 auto; }
+    .error-image-container { width: 100%; display: flex; flex-direction: column; align-items: center; }
+    .error-image-container p { margin: 0 0 8px 0; }
+    .error-image-container img { width: 100%; max-width: 280px; height: 280px; border-radius: 12px; object-fit: contain; }
+    .media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    body { box-sizing: border-box; }
+  </style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ <script src="/_sdk/telemetry_sdk.js"></script></head>
+ <body class="h-full overflow-auto">
+  <div id="app" class="game-bg h-full w-full flex flex-col items-center justify-center p-4">
+   <div id="register-screen" class="text-center w-full max-w-2xl slide-in">
+    <div class="mb-8">
+     <span class="text-7xl star-pulse inline-block">⭐</span>
+    </div>
+    <h1 id="title" class="title-main mb-8">La Super Estrella</h1>
+    <div class="card-container">
+     <h2 class="text-3xl font-bold text-yellow-300 mb-6">📝 Registrar Jugadores</h2>
+     <div id="players-list" class="mb-6 max-h-64 overflow-y-auto"></div>
+     <div class="flex gap-3 mb-6">
+      <input id="player-name-input" type="text" placeholder="Nombre del jugador" class="input-field flex-1 text-lg"> <button onclick="addPlayer()" class="btn-primary"><i data-lucide="plus" class="w-5 h-5 inline"></i></button>
+     </div><button onclick="startGameSession()" id="start-btn" disabled class="btn-primary w-full py-4 text-lg disabled:opacity-50">🎲 ¡Comenzar!</button>
+    </div>
+   </div>
+   <div id="dice-screen" class="hidden w-full slide-in">
+    <div class="flex justify-between items-center mb-6 px-4">
+     <button onclick="backToMenu()" class="text-purple-300 hover:text-yellow-300 transition"><i data-lucide="arrow-left" class="w-6 h-6"></i></button> <span class="text-yellow-300 font-bold text-2xl">Ánimo tu puedes 🫡🌟</span> <button onclick="endGame()" class="text-rose-400 hover:text-rose-300 transition"><i data-lucide="power" class="w-6 h-6"></i></button>
+    </div>
+    <div class="flex gap-6 px-4 h-full">
+     <div class="text-center flex-1 max-w-2xl mx-auto">
+      <p class="text-purple-200 mb-6 text-lg">💰 <span id="player-coins" class="text-yellow-300 font-bold text-xl">0</span> | ⭐ <span id="player-stars" class="text-yellow-300 font-bold text-xl">0</span></p>
+      <div class="card-container">
+       <h2 class="text-3xl font-bold text-yellow-300 mb-8">¡Lanza el Dado!</h2>
+       <div id="dice-container" class="flex justify-center mb-8 h-32">
+        <div class="dice-face opacity-40">
+         ?
+        </div>
+       </div><button id="roll-dice-btn" onclick="rollDiceGame()" class="btn-primary w-full py-4 text-xl mb-4">🎲 ¡LANZAR!</button>
+       <p id="result-message" class="text-white font-bold text-xl mt-4 mb-4"></p><button id="next-btn" onclick="proceedAfterDice()" class="hidden btn-primary w-full py-4 text-xl">➡️ Siguiente</button>
+      </div>
+     </div>
+     <div id="scoreboard" class="hidden flex-1 max-w-xs">
+      <div class="card-container h-full overflow-y-auto">
+       <h3 class="text-2xl font-bold text-yellow-300 mb-4">🏆 Posiciones</h3>
+       <table class="w-full text-left">
+        <tbody id="scoreboard-body"></tbody>
+       </table>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div id="participant-screen" class="hidden text-center w-full max-w-2xl slide-in">
+    <div class="mb-8">
+     <span class="text-6xl star-pulse inline-block">⭐</span>
+    </div>
+    <div class="card-container">
+     <h2 class="text-3xl font-bold text-yellow-300 mb-6">¿A quién le toca?</h2>
+     <div id="participant-list" class="mb-4 max-h-64 overflow-y-auto space-y-3"></div>
+    </div>
+   </div>
+   <div id="dynamic-screen" class="hidden text-center w-full max-w-6xl max-h-screen overflow-y-auto slide-in">
+    <div class="flex justify-between items-center mb-6">
+     <button onclick="continueDice()" class="text-purple-300 hover:text-yellow-300 transition"><i data-lucide="arrow-left" class="w-6 h-6"></i></button> <span id="level-name" class="text-yellow-300 font-bold text-xl"></span>
+    </div>
+    <div class="card-container mb-6">
+     <p id="selected-participant" class="text-2xl font-bold text-emerald-400 mb-6"></p>
+     <div id="dynamic-content" class="mb-4 flex flex-col items-center w-full"></div>
+     <div id="audio-controls" class="hidden mt-6 flex justify-center gap-4"><button id="pause-btn" onclick="toggleAudioPause()" class="btn-secondary px-6 py-2"><i data-lucide="pause" class="w-5 h-5 inline"></i> Pausar</button> <button id="resume-btn" onclick="toggleAudioResume()" class="btn-secondary px-6 py-2 hidden"><i data-lucide="play" class="w-5 h-5 inline"></i> Reanudar</button>
+     </div>
+    </div><button onclick="completeActivity()" class="btn-primary w-full py-4 text-lg">✓ Ir a Puntuación</button>
+   </div>
+   <div id="points-screen" class="hidden text-center w-full max-w-2xl slide-in">
+    <div class="mb-8">
+     <span class="text-6xl star-pulse inline-block">⭐</span>
+    </div>
+    <div class="card-container">
+     <p class="text-2xl text-purple-200 mb-2">Jugador: <span id="points-player" class="text-yellow-300 font-bold"></span></p>
+     <p class="text-lg text-purple-200 mb-8">Actividad: <span id="points-activity" class="text-yellow-300 font-bold"></span></p>
+     <div id="duel-winner-section" class="hidden mb-6">
+      <p class="text-xl text-purple-200 mb-4">⚔️ ¿Quién ganó el duelo?</p>
+      <div class="flex gap-3 justify-center mb-6" id="duel-winner-buttons"></div>
+     </div>
+     <div class="mb-6">
+      <p class="text-xl text-purple-200 mb-4">¿Completó correctamente?</p>
+      <div class="flex gap-3 justify-center mb-6">
+       <button onclick="setActivityResult(true)" id="btn-yes" class="btn-primary px-8 py-3 text-lg">✓ Completado</button> <button onclick="setActivityResult(false)" id="btn-no" class="btn-secondary px-8 py-3 text-lg">✗ No completado</button>
+      </div>
+     </div>
+     <div id="points-input-container" class="hidden mb-6">
+      <label class="text-purple-200 block mb-3 text-lg">💰 Monedas a asignar:</label> <input id="points-input" type="number" min="0" class="input-field w-full text-center text-xl py-3">
+     </div><button onclick="savePoints()" class="btn-primary w-full py-4 text-lg">💾 Guardar Puntuación</button>
+    </div>
+   </div>
+   <div id="podium-screen" class="hidden text-center w-full max-w-3xl slide-in">
+    <h1 class="text-5xl font-bold text-yellow-300 mb-8">🏆 ¡GANADORES! 🏆</h1>
+    <div id="podium-container" class="grid grid-cols-3 gap-4 mb-8 items-end px-4"></div>
+    <div class="card-container max-h-64 overflow-y-auto">
+     <table class="w-full text-lg">
+      <tbody id="final-ranking"></tbody>
+     </table>
+    </div><button onclick="showGameMenu()" class="btn-primary w-full py-4 text-lg mt-6">🎮 Jugar de Nuevo</button>
+   </div>
+  </div>
+  <script>
+    let players = [], currentPlayerIndex = 0, currentDiceResult = 0, selectedParticipant = null, duelPartner = null, duelWinner = null;
+    let loadedAudios = [], loadedImages = [], currentAudio = null;
+    let labyrinthImage = './assets/images/labyrinth.jpg', errorImage1 = './assets/images/error1.jpg', errorImage2 = './assets/images/error2.jpg';
+    let barquitoText = 'Mi barquito de papel viene cargado con..............';
+    let usedAudioIndices = [], usedImageIndices = [], usedPuzzleIndices = [], currentSelectedIndex = -1, isSelecting = false;
+
+    const ACTIVITIES = {1: {name: '🎵 Nivel 1 - Sonidos', coins: 5}, 2: {name: '🖼️ Nivel 2 - Imágenes', coins: 7}, 3: {name: '🧩 Nivel 3 - Retos', coins: 10}, 4: {name: '⚔️ Nivel 4 - Duelos', coins: 10}, 5: {name: '💰 Nivel 5 - Gratis', coins: 5}, 6: {name: '👥 Nivel 6 - Grupal', coins: 7}};
+
+    function loadLocalMedia() {
+      loadedAudios = [];
+      for (let i = 1; i <= 12; i++) loadedAudios.push({url: `./assets/sounds/sound${i}.mp3`, name: `Audio ${i}`});
+      loadedImages = [];
+      for (let i = 1; i <= 28; i++) loadedImages.push({url: `./assets/images/image${i}.jpg`, name: `Imagen ${i}`});
+    }
+
+    function addPlayer() {
+      const input = document.getElementById('player-name-input');
+      const name = input.value.trim();
+      if (!name || players.some(p => p.name === name)) return;
+      players.push({name, coins: 0, stars: 0});
+      input.value = '';
+      updatePlayersList();
+    }
+
+    function updatePlayersList() {
+      const list = document.getElementById('players-list');
+      list.innerHTML = players.map((p, i) => `<div class="flex justify-between bg-white/10 p-3 rounded-lg mb-2 items-center"><span class="text-white text-lg font-bold">${p.name}</span><button onclick="removePlayer(${i})" class="text-rose-400 hover:text-rose-300"><i data-lucide="trash-2" class="w-5 h-5"></i></button></div>`).join('');
+      document.getElementById('start-btn').disabled = players.length < 2;
+      lucide.createIcons();
+    }
+
+    function removePlayer(i) { players.splice(i, 1); updatePlayersList(); }
+
+    function startGameSession() {
+      if (players.length < 2) return;
+      loadLocalMedia();
+      currentPlayerIndex = 0;
+      usedAudioIndices = [];
+      usedImageIndices = [];
+      usedPuzzleIndices = [];
+      showDiceScreen();
+    }
+
+    function showDiceScreen() {
+      hideAll();
+      document.getElementById('dice-screen').classList.remove('hidden');
+      const p = players[currentPlayerIndex];
+      document.getElementById('player-coins').textContent = p.coins;
+      document.getElementById('player-stars').textContent = p.stars;
+      document.getElementById('result-message').textContent = '';
+      document.getElementById('roll-dice-btn').disabled = false;
+      document.getElementById('scoreboard').classList.add('hidden');
+      updateScoreboard();
+    }
+
+    function rollDiceGame() {
+      const btn = document.getElementById('roll-dice-btn');
+      btn.disabled = true;
+      const r = Math.random();
+      currentDiceResult = r < 0.40 ? 2 : r < 0.65 ? 1 : r < 0.85 ? 3 : r < 0.88 ? 5 : r < 0.94 ? 4 : 6;
+      const diceContainer = document.getElementById('dice-container');
+      document.getElementById('scoreboard').classList.remove('hidden');
+      let cycleCount = 0;
+      const cycleInterval = setInterval(() => {
+        const randomNum = Math.floor(Math.random() * 6) + 1;
+        diceContainer.innerHTML = `<div class="dice-rolling dice-face">${randomNum}</div>`;
+        cycleCount++;
+        if (cycleCount > 25) {
+          clearInterval(cycleInterval);
+          diceContainer.innerHTML = `<div class="dice-rolling dice-face">${currentDiceResult}</div>`;
+          setTimeout(() => {
+            document.getElementById('result-message').textContent = `¡Salió ${currentDiceResult}! ${ACTIVITIES[currentDiceResult].name}`;
+            document.getElementById('roll-dice-btn').classList.add('hidden');
+            document.getElementById('next-btn').classList.remove('hidden');
+          }, 600);
+        }
+      }, 80);
+    }
+
+    function proceedAfterDice() {
+      document.getElementById('roll-dice-btn').classList.remove('hidden');
+      document.getElementById('next-btn').classList.add('hidden');
+      document.getElementById('roll-dice-btn').disabled = false;
+      document.getElementById('scoreboard').classList.add('hidden');
+      showParticipantSelection();
+    }
+
+    function showParticipantSelection() {
+      hideAll();
+      document.getElementById('participant-screen').classList.remove('hidden');
+      const names = players.map(p => p.name);
+      let html = '';
+      if (currentDiceResult === 4) {
+        html = '<p class="text-yellow-300 mb-4 font-bold text-xl">⚔️ Selecciona Primer Jugador:</p>' + names.map(n => `<button onclick="selectDuelPlayer1('${n}')" class="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg mb-3 font-bold text-lg hover:shadow-lg hover:shadow-red-500/50 transition">⚔️ ${n}</button>`).join('');
+      } else if (currentDiceResult === 6) {
+        html = '<p class="text-yellow-300 mb-4 font-bold text-xl">👥 Todos Participan:</p>' + names.map(n => `<p class="text-white text-lg font-bold mb-2">👤 ${n}</p>`).join('') + '<button onclick="selectGroupActivity()" class="w-full py-3 mt-6 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg font-bold text-lg hover:shadow-lg hover:shadow-emerald-500/50 transition">Continuar →</button>';
+      } else {
+        html = '<p class="text-yellow-300 mb-4 font-bold text-xl">👤 Selecciona Participante:</p>' + names.map(n => `<button onclick="selectParticipant('${n}')" class="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg mb-3 font-bold text-lg hover:shadow-lg hover:shadow-blue-500/50 transition">👤 ${n}</button>`).join('');
+      }
+      document.getElementById('participant-list').innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function selectParticipant(n) { selectedParticipant = n; showActivityScreen(); }
+    function selectGroupActivity() { selectedParticipant = 'all'; showActivityScreen(); }
+
+    function selectDuelPlayer1(n) {
+      selectedParticipant = n;
+      const others = players.filter(p => p.name !== n).map(p => p.name);
+      document.getElementById('participant-list').innerHTML = `<p class="text-yellow-300 mb-4 font-bold text-xl">⚔️ ${n}</p><p class="text-yellow-300 mb-4 font-bold text-xl">vs</p><p class="text-yellow-300 mb-4 font-bold text-xl">Segundo Jugador:</p>` + others.map(o => `<button onclick="selectDuelPlayer2('${o}')" class="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg mb-3 font-bold text-lg hover:shadow-lg hover:shadow-orange-500/50 transition">⚔️ ${o}</button>`).join('');
+      lucide.createIcons();
+    }
+
+    function selectDuelPlayer2(n) { duelPartner = n; duelWinner = null; showActivityScreen(); }
+
+    function showActivityScreen() {
+      hideAll();
+      document.getElementById('dynamic-screen').classList.remove('hidden');
+      const act = ACTIVITIES[currentDiceResult];
+      document.getElementById('level-name').textContent = act.name;
+      if (currentDiceResult === 4) document.getElementById('selected-participant').textContent = `⚔️ ${selectedParticipant} vs ${duelPartner}`;
+      else if (selectedParticipant === 'all') document.getElementById('selected-participant').textContent = '👥 ¡Dinámicas Grupales!';
+      else document.getElementById('selected-participant').textContent = `🎯 ${selectedParticipant}`;
+
+      document.getElementById('audio-controls').classList.add('hidden');
+      let content = '';
+      if (currentDiceResult === 1) {
+        content = `<p class="text-white mb-6 font-bold text-xl">🔊 ${loadedAudios.length} Audios</p><div class="media-grid" id="audio-grid"></div>`;
+        setTimeout(() => { document.getElementById('audio-controls').classList.remove('hidden'); animateAndSelectAudio(); }, 100);
+      } else if (currentDiceResult === 2) {
+        const availableImages = loadedImages.filter((_, i) => ![3, 7, 17, 18, 19].includes(i));
+        content = `<p class="text-white mb-6 font-bold text-xl">🖼️ ${availableImages.length} Imágenes</p><div class="image-gallery" id="image-grid"></div>`;
+        setTimeout(() => animateAndSelectImage(availableImages), 100);
+      } else if (currentDiceResult === 3) {
+        content = `<button onclick="showActivityType('lab')" class="btn-secondary w-full py-3 mb-3 text-lg font-bold">🧩 Laberinto</button><button onclick="showActivityType('rid')" class="btn-secondary w-full py-3 mb-3 text-lg font-bold">🧠 Acertijo</button><button onclick="showActivityType('err')" class="btn-secondary w-full py-3 text-lg font-bold">🔍 Encuentra el Error</button>`;
+      } else if (currentDiceResult === 4) {
+        content = `<button onclick="showActivityType('c1')" class="btn-secondary w-full py-3 mb-3 text-lg font-bold">💌 Envía Carta a Steven</button><button onclick="showActivityType('c2')" class="btn-secondary w-full py-3 mb-3 text-lg font-bold">🎾 Mete Pelota en Vaso</button><button onclick="showActivityType('c3')" class="btn-secondary w-full py-3 mb-3 text-lg font-bold">🦁 Animales (Granja-Salvajes-Acuáticos)</button><button onclick="showActivityType('c4')" class="btn-secondary w-full py-3 text-lg font-bold">💬 Guerra de Refranes</button>`;
+      } else if (currentDiceResult === 5) {
+        content = `<p class="text-6xl text-green-400 font-bold">¡5 Monedas<br>Gratis! 💰</p>`;
+      } else {
+        content = `<button onclick="showActivityType('g1')" class="btn-secondary w-full py-3 mb-3 text-lg font-bold">${barquitoText}</button><button onclick="showActivityType('g2')" class="btn-secondary w-full py-3 mb-3 text-lg font-bold">📞 Teléfono Descompuesto</button><button onclick="showActivityType('g3')" class="btn-secondary w-full py-3 text-lg font-bold">🔤 Palabras por Letra</button>`;
+      }
+      document.getElementById('dynamic-content').innerHTML = content;
+      lucide.createIcons();
+    }
+
+    function animateAndSelectAudio() {
+      if (isSelecting) return;
+      isSelecting = true;
+      const grid = document.getElementById('audio-grid');
+      const availableIndices = loadedAudios.map((_, i) => i).filter(i => !usedAudioIndices.includes(i));
+      if (availableIndices.length === 0) {
+        usedAudioIndices = [];
+        availableIndices.push(...loadedAudios.map((_, i) => i));
+      }
+      const selectedIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+      currentSelectedIndex = selectedIndex;
+      let html = '';
+      loadedAudios.forEach((a, i) => {
+        const isUsed = usedAudioIndices.includes(i);
+        const style = isUsed ? 'filter: grayscale(1) brightness(0.3) blur(2px); opacity: 0.5; pointer-events: none; cursor: not-allowed;' : '';
+        html += `<button onclick="playAudio('${a.url}')" class="media-item text-xl transition-all" id="audio-${i}" style="${style}" ${isUsed ? 'disabled' : ''}>🔊 ${i+1}</button>`;
+      });
+      grid.innerHTML = html;
+      let rotations = 0;
+      const maxRotations = 20;
+      const interval = setInterval(() => {
+        const randomIndex = Math.floor(Math.random() * loadedAudios.length);
+        const btn = document.getElementById(`audio-${randomIndex}`);
+        if (btn && !usedAudioIndices.includes(randomIndex)) {
+          btn.classList.remove('spin-animation');
+          void btn.offsetWidth;
+          btn.classList.add('spin-animation');
+        }
+        rotations++;
+        if (rotations >= maxRotations) {
+          clearInterval(interval);
+          const selectedBtn = document.getElementById(`audio-${selectedIndex}`);
+          if (selectedBtn) {
+            selectedBtn.classList.remove('spin-animation');
+            void selectedBtn.offsetWidth;
+            selectedBtn.classList.add('spin-animation');
+            selectedBtn.style.background = 'linear-gradient(135deg, rgba(255,215,0,0.6) 0%, rgba(251,191,36,0.8) 100%)';
+            selectedBtn.style.boxShadow = '0 0 30px rgba(255,215,0,0.8)';
+            selectedBtn.style.borderColor = '#fde047';
+            selectedBtn.style.filter = 'none';
+          }
+          isSelecting = false;
+        }
+      }, 100);
+    }
+
+    function animateAndSelectImage(availableImages) {
+      if (isSelecting) return;
+      isSelecting = true;
+      const grid = document.getElementById('image-grid');
+      const availableIndices = availableImages.map((img, idx) => loadedImages.indexOf(img)).filter(i => !usedImageIndices.includes(i));
+      if (availableIndices.length === 0) {
+        usedImageIndices = [];
+        availableIndices.push(...availableImages.map(img => loadedImages.indexOf(img)));
+      }
+      const selectedIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+      currentSelectedIndex = selectedIndex;
+      let html = '';
+      availableImages.forEach((img, idx) => {
+        const actualIndex = loadedImages.indexOf(img);
+        const isUsed = usedImageIndices.includes(actualIndex);
+        const style = isUsed ? 'filter: grayscale(1) brightness(0.15) blur(5px); opacity: 0.25; pointer-events: none; cursor: not-allowed;' : '';
+        html += `<div class="image-gallery-item transition-all" id="img-${actualIndex}" style="${style}" ${isUsed ? 'disabled' : ''}><img src="${img.url}" onclick="${isUsed ? 'return false;' : `selectAndViewImage('${img.url}', ${actualIndex})`}" alt="Imagen ${idx+1}" style="width: 100%; height: 100%; object-fit: contain; object-position: center; ${isUsed ? 'pointer-events: none;' : ''}" onerror="this.src=''; this.parentElement.style.background='#e5e7eb'; this.parentElement.innerHTML='<p class=\\\'text-white text-xs\\\'>No encontrada</p>'" loading="lazy"></div>`;
+      });
+      grid.innerHTML = html;
+      let rotations = 0;
+      const maxRotations = 20;
+      const interval = setInterval(() => {
+        const randomIndex = availableImages[Math.floor(Math.random() * availableImages.length)];
+        const actualIdx = loadedImages.indexOf(randomIndex);
+        const div = document.getElementById(`img-${actualIdx}`);
+        if (div && !usedImageIndices.includes(actualIdx)) {
+          div.classList.remove('spin-animation');
+          void div.offsetWidth;
+          div.classList.add('spin-animation');
+        }
+        rotations++;
+        if (rotations >= maxRotations) {
+          clearInterval(interval);
+          const selectedDiv = document.getElementById(`img-${selectedIndex}`);
+          if (selectedDiv) {
+            selectedDiv.classList.remove('spin-animation');
+            void selectedDiv.offsetWidth;
+            selectedDiv.classList.add('spin-animation');
+            selectedDiv.style.borderColor = '#fde047';
+            selectedDiv.style.boxShadow = '0 0 30px rgba(255,215,0,0.8)';
+            selectedDiv.style.filter = 'none';
+            selectedDiv.style.opacity = '1';
+            selectedDiv.style.pointerEvents = 'auto';
+            selectedDiv.style.cursor = 'pointer';
+            setTimeout(() => {
+              selectAndViewImage(loadedImages[selectedIndex].url, selectedIndex);
+            }, 800);
+          }
+          isSelecting = false;
+        }
+      }, 100);
+    }
+
+    function selectAndViewImage(url, imageIndex) {
+      usedImageIndices.push(imageIndex);
+      const imgDiv = document.getElementById(`img-${imageIndex}`);
+      if (imgDiv) {
+        imgDiv.style.filter = 'grayscale(1) brightness(0.15) blur(5px)';
+        imgDiv.style.opacity = '0.25';
+        imgDiv.style.pointerEvents = 'none';
+        imgDiv.style.cursor = 'not-allowed';
+        imgDiv.onclick = null;
+        const img = imgDiv.querySelector('img');
+        if (img) img.onclick = null;
+      }
+      viewImage(url);
+    }
+
+    function playAudio(url) {
+      if (currentAudio) currentAudio.pause();
+      usedAudioIndices.push(currentSelectedIndex);
+      const audioBtn = document.getElementById(`audio-${currentSelectedIndex}`);
+      if (audioBtn) {
+        audioBtn.style.filter = 'grayscale(1) brightness(0.3) blur(2px)';
+        audioBtn.style.opacity = '0.5';
+        audioBtn.style.pointerEvents = 'none';
+        audioBtn.style.cursor = 'not-allowed';
+        audioBtn.disabled = true;
+        audioBtn.onclick = null;
+      }
+      currentAudio = new Audio(url);
+      document.getElementById('pause-btn').classList.remove('hidden');
+      document.getElementById('resume-btn').classList.add('hidden');
+      currentAudio.play().catch(e => alert('Error al reproducir audio'));
+    }
+
+    function toggleAudioPause() {
+      if (currentAudio) {
+        currentAudio.pause();
+        document.getElementById('pause-btn').classList.add('hidden');
+        document.getElementById('resume-btn').classList.remove('hidden');
+      }
+    }
+
+    function toggleAudioResume() {
+      if (currentAudio) {
+        currentAudio.play();
+        document.getElementById('pause-btn').classList.remove('hidden');
+        document.getElementById('resume-btn').classList.add('hidden');
+      }
+    }
+
+    function viewImage(url) {
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50';
+      modal.onclick = () => modal.remove();
+      modal.innerHTML = `<div onclick="event.stopPropagation()" class="w-full h-full flex flex-col items-center justify-center"><img src="${url}" class="max-w-full max-h-[90%] object-contain rounded-lg" onerror="this.src=''; this.textContent='Imagen no encontrada'" loading="lazy"><button onclick="this.closest('.fixed').remove()" class="btn-primary mt-6 px-8 py-3 text-lg">Cerrar</button></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showActivityType(t) {
+      let html = '<p class="text-purple-200 mb-4 text-lg">Realiza la actividad...</p>';
+      if (t === 'lab') {
+        html = `<img src="${labyrinthImage}" class="activity-image cursor-pointer" onclick="viewImage('${labyrinthImage}')" onerror="this.style.background='#e5e7eb'; this.alt='Laberinto no encontrado'" loading="lazy"><p class="text-white text-xl font-bold mt-4">Resuelve el laberinto</p>`;
+      } else if (t === 'rid') {
+        const puzzleIndices = [3, 7, 17, 18, 19];
+        const availablePuzzles = puzzleIndices.filter(i => !usedPuzzleIndices.includes(i));
+        if (availablePuzzles.length === 0) { usedPuzzleIndices = []; availablePuzzles.push(...puzzleIndices); }
+        const selectedPuzzle = availablePuzzles[Math.floor(Math.random() * availablePuzzles.length)];
+        usedPuzzleIndices.push(selectedPuzzle);
+        const puzzleImg = loadedImages[selectedPuzzle];
+        html = `<img src="${puzzleImg.url}" class="activity-image" onerror="this.style.background='#e5e7eb'; this.alt='Acertijo no encontrado'" loading="lazy"><p class="text-white text-xl font-bold mt-4">Resuelve el acertijo</p>`;
+      } else if (t === 'err') {
+        html = `<div class="error-comparison"><div class="error-image-container"><p class="text-purple-300 font-bold mb-2">🖼️ Imagen 1</p><img src="${errorImage1}" class="cursor-pointer" onclick="viewImage('${errorImage1}')" onerror="this.style.background='#e5e7eb'; this.alt='Imagen no encontrada'" loading="lazy"></div><div class="error-image-container"><p class="text-purple-300 font-bold mb-2">🖼️ Imagen 2</p><img src="${errorImage2}" class="cursor-pointer" onclick="viewImage('${errorImage2}')" onerror="this.style.background='#e5e7eb'; this.alt='Imagen no encontrada'" loading="lazy"></div></div><p class="text-white text-xl font-bold mt-4">¡Encuentra los errores en ambas imágenes!</p>`;
+      }
+      document.getElementById('dynamic-content').innerHTML = html;
+    }
+
+    function completeActivity() {
+      hideAll();
+      document.getElementById('points-screen').classList.remove('hidden');
+      document.getElementById('duel-winner-section').classList.add('hidden');
+      if (currentDiceResult === 4) {
+        document.getElementById('points-player').textContent = `${selectedParticipant} vs ${duelPartner}`;
+        document.getElementById('duel-winner-section').classList.remove('hidden');
+        document.getElementById('duel-winner-buttons').innerHTML = `<button onclick="selectDuelWinner('${selectedParticipant}')" class="btn-primary px-8 py-3 text-lg">🥇 ${selectedParticipant}</button><button onclick="selectDuelWinner('${duelPartner}')" class="btn-primary px-8 py-3 text-lg">🥇 ${duelPartner}</button>`;
+      } else if (selectedParticipant === 'all') {
+        document.getElementById('points-player').textContent = 'Equipo';
+      } else {
+        document.getElementById('points-player').textContent = selectedParticipant;
+      }
+      document.getElementById('points-activity').textContent = ACTIVITIES[currentDiceResult].name;
+      document.getElementById('btn-yes').classList.remove('ring-2');
+      document.getElementById('btn-no').classList.remove('ring-2');
+      document.getElementById('points-input-container').classList.add('hidden');
+      document.getElementById('points-input').value = '0';
+    }
+
+    function selectDuelWinner(winner) {
+      duelWinner = winner;
+      document.querySelectorAll('#duel-winner-buttons button').forEach(btn => btn.classList.remove('ring-4', 'ring-yellow-300'));
+      event.target.classList.add('ring-4', 'ring-yellow-300');
+    }
+
+    function setActivityResult(completed) {
+      if (completed) {
+        document.getElementById('btn-yes').classList.add('ring-2', 'ring-yellow-300');
+        document.getElementById('btn-no').classList.remove('ring-2');
+        document.getElementById('points-input-container').classList.remove('hidden');
+        document.getElementById('points-input').value = ACTIVITIES[currentDiceResult].coins;
+      } else {
+        document.getElementById('btn-no').classList.add('ring-2', 'ring-rose-400');
+        document.getElementById('btn-yes').classList.remove('ring-2');
+        document.getElementById('points-input-container').classList.add('hidden');
+        document.getElementById('points-input').value = '0';
+      }
+    }
+
+    function savePoints() {
+      const coins = parseInt(document.getElementById('points-input').value) || 0;
+      if (currentDiceResult === 6) {
+        players.forEach(p => { p.coins += coins; p.stars = Math.floor(p.coins / 10); });
+      } else if (currentDiceResult === 5) {
+        const p = players.find(x => x.name === selectedParticipant);
+        if (p) { p.coins += 5; p.stars = Math.floor(p.coins / 10); }
+      } else if (currentDiceResult === 4 && duelWinner) {
+        const p = players.find(x => x.name === duelWinner);
+        if (p) { p.coins += coins; p.stars = Math.floor(p.coins / 10); }
+      } else {
+        const p = players.find(x => x.name === selectedParticipant);
+        if (p) { p.coins += coins; p.stars = Math.floor(p.coins / 10); }
+      }
+      selectedParticipant = null; duelPartner = null; duelWinner = null;
+      showDiceScreen();
+    }
+
+    function continueDice() {
+      selectedParticipant = null; duelPartner = null; duelWinner = null;
+      if (currentAudio) currentAudio.pause();
+      currentAudio = null;
+      showDiceScreen();
+    }
+
+    function endGame() {
+      players.forEach(p => { p.stars = Math.floor(p.coins / 10); });
+      if (currentAudio) currentAudio.pause();
+      showPodium();
+    }
+
+    function showPodium() {
+      hideAll();
+      document.getElementById('podium-screen').classList.remove('hidden');
+      const sorted = [...players].sort((a, b) => (b.stars || 0) - (a.stars || 0));
+      let podiumHTML = '';
+      if (sorted[1]) podiumHTML += `<div class="bg-gradient-to-b from-gray-400 to-gray-600 rounded-lg p-6"><p class="text-5xl mb-2">🥈</p><p class="text-white font-bold text-xl">${sorted[1].name}</p><p class="text-yellow-300 font-bold text-3xl">${sorted[1].stars || 0}⭐</p></div>`;
+      if (sorted[0]) podiumHTML += `<div class="bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-lg p-6 scale-125 z-10"><p class="text-6xl mb-2">🥇</p><p class="text-white font-bold text-2xl">${sorted[0].name}</p><p class="text-white font-bold text-4xl mb-2">${sorted[0].stars || 0}⭐</p><p class="text-lg font-bold">¡CAMPEÓN!</p></div>`;
+      if (sorted[2]) podiumHTML += `<div class="bg-gradient-to-b from-orange-400 to-orange-600 rounded-lg p-6"><p class="text-5xl mb-2">🥉</p><p class="text-white font-bold text-xl">${sorted[2].name}</p><p class="text-yellow-300 font-bold text-3xl">${sorted[2].stars || 0}⭐</p></div>`;
+      document.getElementById('podium-container').innerHTML = podiumHTML;
+      document.getElementById('final-ranking').innerHTML = sorted.map((p, i) => `<tr class="border-b border-purple-300"><td class="py-3 text-yellow-300 font-bold text-lg">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td><td class="text-left text-white text-lg font-bold">${p.name}</td><td class="text-yellow-300 font-bold text-lg">${Array(p.stars || 0).fill('⭐').join('')}</td></tr>`).join('');
+    }
+
+    function backToMenu() {
+      players = [];
+      if (currentAudio) currentAudio.pause();
+      currentAudio = null;
+      hideAll();
+      document.getElementById('register-screen').classList.remove('hidden');
+      updatePlayersList();
+    }
+
+    function showGameMenu() {
+      currentPlayerIndex = 0;
+      players.forEach(p => { p.coins = 0; p.stars = 0; });
+      if (currentAudio) currentAudio.pause();
+      currentAudio = null;
+      hideAll();
+      document.getElementById('register-screen').classList.remove('hidden');
+      updatePlayersList();
+    }
+
+    function hideAll() {
+      document.querySelectorAll('[id$="-screen"]').forEach(e => e.classList.add('hidden'));
+    }
+
+    function updateScoreboard() {
+      const sorted = [...players].sort((a, b) => {
+        const starsDiff = (b.stars || 0) - (a.stars || 0);
+        if (starsDiff !== 0) return starsDiff;
+        return (b.coins || 0) - (a.coins || 0);
+      });
+      const tbody = document.getElementById('scoreboard-body');
+      tbody.innerHTML = sorted.map((p, i) => `<tr class="border-b border-purple-400 py-2"><td class="py-2 text-yellow-300 font-bold text-lg">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td><td class="text-left text-white text-sm font-bold px-2">${p.name}</td><td class="text-yellow-300 font-bold text-sm">${p.stars || 0}⭐ / ${p.coins || 0}💰</td></tr>`).join('');
+    }
+
+    const cfg = {game_title: 'La Super Estrella', labyrinth_image: './assets/images/labyrinth.jpg', error_image_1: './assets/images/error1.jpg', error_image_2: './assets/images/error2.jpg', barquito_text: 'Mi barquito de papel viene cargado con..............'};
+    
+    window.elementSdk.init({
+      defaultConfig: cfg,
+      onConfigChange: async (c) => {
+        document.getElementById('title').textContent = c.game_title || cfg.game_title;
+        labyrinthImage = c.labyrinth_image || cfg.labyrinth_image;
+        errorImage1 = c.error_image_1 || cfg.error_image_1;
+        errorImage2 = c.error_image_2 || cfg.error_image_2;
+        barquitoText = c.barquito_text || cfg.barquito_text;
+      },
+      mapToCapabilities: () => ({recolorables: [], borderables: [], fontEditable: undefined, fontSizeable: undefined}),
+      mapToEditPanelValues: (c) => new Map([['game_title', c.game_title || cfg.game_title], ['labyrinth_image', c.labyrinth_image || cfg.labyrinth_image], ['error_image_1', c.error_image_1 || cfg.error_image_1], ['error_image_2', c.error_image_2 || cfg.error_image_2], ['barquito_text', c.barquito_text || cfg.barquito_text]])
+    });
+
+    lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a04777564e2afb89',t:'MTc4MDI0NjEwNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
